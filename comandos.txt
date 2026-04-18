@@ -1,3 +1,7 @@
 git push repo1 main
 git push repo2 main
  
+docker compose up --build
+
+fms1997
+Franco97Sassi

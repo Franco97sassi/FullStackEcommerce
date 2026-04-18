@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "./globals.css";
+// import "./globals.css";
 import Link from "next/link";
 import { QueryProvider } from "@/prodivers/query-provider";
 import { CartProvider } from "@/app/carrito/context/cart-context";
