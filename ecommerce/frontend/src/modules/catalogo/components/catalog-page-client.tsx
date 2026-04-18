@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { FormEvent } from "react";
 import { getCategories, getProducts } from "../services/catalog-service";
 import { apiClient } from "@/lib/api/api-client";
-import { AddToCartButton } from "@/modules/carrito/components/add-to-cart-button";
+import { AddToCartButton } from "@/modules/catalogo/components/add-to-cart-button";
 const PAGE_SIZE = 6;
 
 export function CatalogPageClient() {
