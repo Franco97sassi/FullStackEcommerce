@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { QueryProvider } from "@/prodivers/query-provider";
+ import { QueryProvider } from "@/prodivers/query-provider";
+import { CartProvider } from "@/app/carrito/context/cart-context";
 import Link from "next/link";
- 
+
 export const metadata: Metadata = {
   title: "Ecommerce",
   description: "Ecommerce con Next.js y ASP.NET Core",
@@ -16,8 +17,8 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
-        {/* <QueryProvider>{children}</QueryProvider> */}
-    <CartProvider>
+        <QueryProvider>
+          <CartProvider>
             <header className="border-b bg-white">
               <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
                 <Link href="/" className="font-semibold">
@@ -34,6 +35,7 @@ export default function RootLayout({
                 </div>
               </nav>
             </header>
+
             {children}
           </CartProvider>
         </QueryProvider>

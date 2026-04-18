@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug } from "@/modules/catalogo/services/catalog-service";
-
+import { AddToCartButton } from "@/modules/carrito/components/add-to-cart-button";
 type ProductDetailPageProps = {
   params: Promise<{ slug: string }>;
 };

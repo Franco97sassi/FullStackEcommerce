@@ -15,7 +15,7 @@ public class OrdersController(EcommerceDbContext dbContext) : ControllerBase
         [FromBody] CreateOrderRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (request.Items.Count == 0)
+        if (request is null || request.Items is null || request.Items.Count == 0)
         {
             return BadRequest("El carrito no puede estar vacío.");
         }
@@ -30,17 +30,49 @@ public class OrdersController(EcommerceDbContext dbContext) : ControllerBase
             .Select(group => new CreateOrderItemRequest(group.Key, group.Sum(i => i.Quantity)))
             .ToList();
 
-        var productIds = groupedItems.Select(item => item.ProductId).ToList();
+        var productIds = groupedItems
+            .Select(item => item.ProductId)
+            .ToList();
+
+        Console.WriteLine("=== CREATE ORDER DEBUG ===");
+        Console.WriteLine($"Connection string: {dbContext.Database.GetConnectionString()}");
+
+        Console.WriteLine("ProductIds recibidos:");
+        foreach (var id in productIds)
+        {
+            Console.WriteLine(id);
+        }
 
         var products = await dbContext.Products
+            .Include(product => product.Category)
             .Where(product => product.IsActive)
             .Where(product => product.Category.IsActive)
             .Where(product => productIds.Contains(product.Id))
             .ToDictionaryAsync(product => product.Id, cancellationToken);
 
-        if (products.Count != groupedItems.Count)
+        Console.WriteLine("Products encontrados:");
+        foreach (var product in products.Values)
         {
-            return BadRequest("Uno o más productos no existen o no están disponibles.");
+            Console.WriteLine($"Id: {product.Id} | Name: {product.Name} | Stock: {product.Stock}");
+        }
+
+        var missingIds = productIds
+            .Except(products.Keys)
+            .ToList();
+
+        if (missingIds.Any())
+        {
+            Console.WriteLine("MissingIds:");
+            foreach (var id in missingIds)
+            {
+                Console.WriteLine(id);
+            }
+
+            return BadRequest(new
+            {
+                message = "Uno o más productos no existen o no están disponibles.",
+                missingProductIds = missingIds
+            });
         }
 
         foreach (var item in groupedItems)
@@ -49,7 +81,13 @@ public class OrdersController(EcommerceDbContext dbContext) : ControllerBase
 
             if (product.Stock < item.Quantity)
             {
-                return BadRequest($"Stock insuficiente para '{product.Name}'. Disponible: {product.Stock}.");
+                return BadRequest(new
+                {
+                    message = $"Stock insuficiente para '{product.Name}'.",
+                    productId = product.Id,
+                    requestedQuantity = item.Quantity,
+                    availableStock = product.Stock
+                });
             }
         }
 
@@ -105,6 +143,13 @@ public class OrdersController(EcommerceDbContext dbContext) : ControllerBase
 
         return CreatedAtAction(nameof(GetById), new { id = order.Id }, response);
     }
+
+
+
+
+
+
+
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<OrderDetailResponse>> GetById(Guid id, CancellationToken cancellationToken = default)

@@ -1,103 +1,73 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { createOrder } from "@/modules/checkout/services/checkout-service";
-import { useCart } from "@/modules/carrito/context/cart-context";
+import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { getOrderById } from "@/modules/services/checkout-service";
 
-export default function CartPage() {
-  const router = useRouter();
-  const { items, removeItem, updateQuantity, totalAmount, totalItems, clearCart } = useCart();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function OrderDetailPage() {
+  const params = useParams<{ id: string }>();
+  const orderId = params?.id;
 
-  async function handleCheckout() {
-    if (items.length === 0) {
-      setError("El carrito está vacío.");
-      return;
-    }
+  const orderQuery = useQuery({
+    queryKey: ["order-detail", orderId],
+    queryFn: () => getOrderById(orderId!),
+    enabled: Boolean(orderId),
+    retry: false,
+  });
 
-    try {
-      setError(null);
-      setIsSubmitting(true);
-      const order = await createOrder(items);
-      clearCart();
-      router.push(`/orden/${order.orderId}`);
-    } catch {
-      setError("No se pudo completar la compra. Revisá stock o intentá nuevamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  if (orderQuery.isLoading) {
+    return (
+      <main className="mx-auto min-h-screen w-full max-w-4xl px-6 py-10">
+        <p>Cargando orden...</p>
+      </main>
+    );
   }
+
+  if (orderQuery.isError || !orderQuery.data) {
+    return (
+      <main className="mx-auto min-h-screen w-full max-w-4xl space-y-4 px-6 py-10">
+        <h1 className="text-2xl font-bold">No pudimos cargar la orden</h1>
+        <p className="text-sm text-gray-600">Verificá el ID o intentá nuevamente.</p>
+        <Link href="/catalogo" className="text-sm text-blue-600 underline">
+          Volver al catálogo
+        </Link>
+      </main>
+    );
+  }
+
+  const order = orderQuery.data;
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-4xl space-y-6 px-6 py-10">
       <header className="space-y-2">
-        <h1 className="text-3xl font-bold">Carrito</h1>
-        <p className="text-sm text-gray-600">Revisá tus productos antes de confirmar la compra.</p>
+        <h1 className="text-3xl font-bold">¡Compra confirmada!</h1>
+        <p className="text-sm text-gray-600">Orden #{order.orderId}</p>
+        <p className="text-sm text-gray-600">Estado: {order.status}</p>
+        <p className="text-sm text-gray-600">
+          Fecha: {new Date(order.createdAtUtc).toLocaleString("es-AR")}
+        </p>
       </header>
 
-      {items.length === 0 ? (
-        <section className="rounded-xl border border-dashed p-8 text-center">
-          <p className="text-sm text-gray-600">Todavía no agregaste productos.</p>
-          <Link href="/catalogo" className="mt-3 inline-block text-sm text-blue-600 underline">
-            Ir al catálogo
-          </Link>
-        </section>
-      ) : (
-        <section className="space-y-4">
-          {items.map((item) => (
-            <article key={item.productId} className="flex items-center justify-between rounded-xl border p-4">
-              <div>
-                <h2 className="font-semibold">{item.name}</h2>
-                <p className="text-sm text-gray-600">${item.price.toFixed(2)} c/u</p>
-              </div>
+      <section className="space-y-3 rounded-xl border p-4">
+        {order.items.map((item) => (
+          <article key={item.productId} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
+            <div>
+              <p className="font-medium">{item.productName}</p>
+              <p className="text-sm text-gray-600">Cantidad: {item.quantity}</p>
+            </div>
+            <p className="font-semibold">${item.lineTotal.toFixed(2)}</p>
+          </article>
+        ))}
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                  className="rounded border px-3 py-1"
-                >
-                  -
-                </button>
-                <span className="w-8 text-center">{item.quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                  className="rounded border px-3 py-1"
-                >
-                  +
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeItem(item.productId)}
-                  className="ml-3 text-sm text-red-600 underline"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </article>
-          ))}
+        <div className="pt-2 text-right">
+          <p className="text-xl font-bold">Total: ${order.total.toFixed(2)}</p>
+        </div>
+      </section>
 
-          <section className="space-y-2 rounded-xl bg-gray-50 p-4">
-            <p className="text-sm">Items: {totalItems}</p>
-            <p className="text-2xl font-bold">Total: ${totalAmount.toFixed(2)}</p>
-
-            {error && <p className="text-sm text-red-600">{error}</p>}
-
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={handleCheckout}
-              className="rounded-md bg-black px-4 py-2 text-white disabled:opacity-50"
-            >
-              {isSubmitting ? "Procesando..." : "Confirmar compra"}
-            </button>
-          </section>
-        </section>
-      )}
+      <Link href="/catalogo" className="inline-block rounded-md border px-4 py-2 text-sm">
+        Seguir comprando
+      </Link>
     </main>
   );
 }
