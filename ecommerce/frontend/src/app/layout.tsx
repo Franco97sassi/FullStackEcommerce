@@ -59,6 +59,9 @@ export default function RootLayout({
                     <Link href="/login" className="hover:text-slate-700 hover:underline">
                       Login
                     </Link>
+                    <Link href="/admin" className="hover:text-slate-700 hover:underline">
+                      Admin
+                    </Link>
                   </div>
                 </nav>
               </header>
