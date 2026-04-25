@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
+ using Microsoft.AspNetCore.Mvc;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -22,20 +23,26 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     options.InvalidModelStateResponseFactory = context =>
     {
         var errors = context.ModelState
-            .Where(entry => entry.Value?.Errors.Count > 0)
+            .Where(kvp => kvp.Value?.Errors.Count > 0)
             .ToDictionary(
-                entry => entry.Key,
-                entry => entry.Value!.Errors.Select(error => error.ErrorMessage).ToArray());
+                kvp => kvp.Key,
+                kvp => kvp.Value!.Errors
+                    .Select(error => string.IsNullOrWhiteSpace(error.ErrorMessage) ? "Valor inválido." : error.ErrorMessage)
+                    .ToArray());
 
-        return new BadRequestObjectResult(new
+        var response = new
         {
-            message = "Validation failed.",
-            errors,
-            traceId = context.HttpContext.TraceIdentifier
-        });
+            type = "validation_error",
+            title = "Request inválida",
+            status = StatusCodes.Status400BadRequest,
+            detail = "Uno o más campos son inválidos.",
+            traceId = context.HttpContext.TraceIdentifier,
+            errors
+        };
+
+        return new BadRequestObjectResult(response);
     };
 });
-
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddSwaggerGen(options =>
@@ -119,7 +126,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 

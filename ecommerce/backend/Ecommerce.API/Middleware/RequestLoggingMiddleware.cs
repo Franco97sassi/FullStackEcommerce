@@ -8,15 +8,21 @@ public sealed class RequestLoggingMiddleware(RequestDelegate next, ILogger<Reque
     {
         var stopwatch = Stopwatch.StartNew();
 
-        await next(context);
+        try
+        {
+            await next(context);
+        }
+        finally
+        {
+            stopwatch.Stop();
 
-        stopwatch.Stop();
-
-        logger.LogInformation(
-            "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMilliseconds}ms",
-            context.Request.Method,
-            context.Request.Path,
-            context.Response.StatusCode,
-            stopwatch.ElapsedMilliseconds);
+            logger.LogInformation(
+                "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMs} ms | CorrelationId={CorrelationId}",
+                context.Request.Method,
+                context.Request.Path,
+                context.Response.StatusCode,
+                stopwatch.ElapsedMilliseconds,
+                context.TraceIdentifier);
+        }
     }
 }

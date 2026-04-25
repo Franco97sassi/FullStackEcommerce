@@ -11,12 +11,12 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("Ecommerce.API")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("Ecommerce.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d43cb0108743da6db36f3871ad2c30fcd293e91c")]
-[assembly: System.Reflection.AssemblyProductAttribute("Ecommerce.API")]
-[assembly: System.Reflection.AssemblyTitleAttribute("Ecommerce.API")]
+[assembly: System.Reflection.AssemblyProductAttribute("Ecommerce.Tests")]
+[assembly: System.Reflection.AssemblyTitleAttribute("Ecommerce.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 
 // Generado por la clase WriteCodeFragment de MSBuild.
