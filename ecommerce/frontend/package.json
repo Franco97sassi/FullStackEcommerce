@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "npm run test:unit",
+    "test:unit": "tsc -p tsconfig.test.json && node --test .test-dist/tests/**/*.test.js",
+    "test:unit:watch": "tsc -p tsconfig.test.json --watch"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.99.0",
