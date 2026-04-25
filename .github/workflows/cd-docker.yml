@@ -1,0 +1,43 @@
+name: CD Docker (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Tag for Docker images"
+        required: true
+        default: "latest"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ecommerce/backend
+          file: ecommerce/backend/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/ecommerce-backend:${{ github.event.inputs.image_tag }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ecommerce/frontend
+          file: ecommerce/frontend/Dockerfile.prod
+          push: true
+          tags: ghcr.io/${{ github.repository }}/ecommerce-frontend:${{ github.event.inputs.image_tag }}
