@@ -1,12 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/modules/auth/services/auth-service";
 import { useAuth } from "@/app/auth/context/auth-context";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<main className="mx-auto min-h-screen w-full max-w-md px-6 py-10"><p>Cargando...</p></main>}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const { setSession, isAuthenticated } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();

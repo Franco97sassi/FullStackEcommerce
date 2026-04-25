@@ -45,14 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function setSession(state: AuthState) {
     setSessionState(state);
     window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(state));
-        window.dispatchEvent(new Event(AUTH_SESSION_CHANGED_EVENT));
-  }
+    window.dispatchEvent(new Event(AUTH_SESSION_CHANGED_EVENT));  }
 
   function logout() {
     setSessionState(null);
     window.localStorage.removeItem(AUTH_STORAGE_KEY);
-        window.dispatchEvent(new Event(AUTH_SESSION_CHANGED_EVENT));
-  }
+    window.dispatchEvent(new Event(AUTH_SESSION_CHANGED_EVENT));  }
 
   const value = useMemo<AuthContextValue>(
     () => ({
