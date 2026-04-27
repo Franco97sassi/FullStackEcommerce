@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "ignoreDeprecations": "6.0",
-    "lib": [
+     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
@@ -18,8 +17,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true, 
-    "baseUrl": ".",
-    "paths": {
+     "paths": {
       "@/*": [
         "./src/*"
       ]
