@@ -30,8 +30,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
           stock: product.stock,
         })
       }
-      className="rounded-md bg-black px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-40"
-    >
+      className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-100 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-40"    >
       {disabled ? "Sin stock" : "Agregar al carrito"}
     </button>
   );
