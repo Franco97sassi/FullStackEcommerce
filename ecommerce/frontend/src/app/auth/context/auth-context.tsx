@@ -31,7 +31,21 @@ const AUTH_STORAGE_KEY = "ecommerce_auth_session";
 export const authSessionChangedEvent = "auth-session-changed";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+function isAuthState(value: unknown): value is AuthState {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
 
+  const candidate = value as Partial<AuthState>;
+
+  return (
+    typeof candidate.token === "string" &&
+    typeof candidate.expiresAtUtc === "string" &&
+    Boolean(candidate.expiresAtUtc) &&
+    typeof candidate.user === "object" &&
+    candidate.user !== null
+  );
+}
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSessionState] = useState<AuthState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
 
       if (raw) {
-        const parsed = JSON.parse(raw) as AuthState;
+        const parsed = JSON.parse(raw) as unknown;
+
+        if (!isAuthState(parsed)) {
+          window.localStorage.removeItem(AUTH_STORAGE_KEY);
+          return;
+        }
+
 
         if (new Date(parsed.expiresAtUtc).getTime() > Date.now()) {
           setSessionState(parsed);
@@ -49,6 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           window.localStorage.removeItem(AUTH_STORAGE_KEY);
         }
       }
+       } catch {
+      window.localStorage.removeItem(AUTH_STORAGE_KEY);
     } finally {
       setIsLoading(false);
     }
