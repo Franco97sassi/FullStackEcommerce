@@ -75,7 +75,8 @@ public class CartController(EcommerceDbContext dbContext) : ControllerBase
         cart.UpdatedAtUtc = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Ok(ToCartResponse(cart));
+        var updatedCart = await GetCartWithProductsAsync(cart.Id, cancellationToken);
+        return Ok(ToCartResponse(updatedCart));
     }
 
     [HttpPatch("items/{productId:guid}")]
@@ -173,6 +174,14 @@ public class CartController(EcommerceDbContext dbContext) : ControllerBase
         }
 
         return null;
+    }
+ 
+    private async Task<Ecommerce.Domain.Entities.Cart> GetCartWithProductsAsync(Guid cartId, CancellationToken cancellationToken)
+    {
+        return await dbContext.Carts
+            .Include(c => c.Items)
+            .ThenInclude(i => i.Product)
+            .FirstAsync(c => c.Id == cartId, cancellationToken);
     }
 
     private async Task<Ecommerce.Domain.Entities.Cart> EnsureCartAsync(Guid userId, CancellationToken cancellationToken)

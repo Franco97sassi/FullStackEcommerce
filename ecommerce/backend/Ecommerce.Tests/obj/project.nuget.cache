@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "aknSP2Yn9uQ=",
+  "dgSpecHash": "Fl1nu4W4UJA=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Franc\\Desktop\\EcommerceFullStack\\ecommerce\\backend\\Ecommerce.Tests\\Ecommerce.Tests.csproj",
+  "projectFilePath": "C:\\Users\\Franc\\Desktop\\FullStackEcommerce\\FullStackEcommerce\\ecommerce\\backend\\Ecommerce.Tests\\Ecommerce.Tests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Franc\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\Franc\\.nuget\\packages\\coverlet.collector\\6.0.4\\coverlet.collector.6.0.4.nupkg.sha512",

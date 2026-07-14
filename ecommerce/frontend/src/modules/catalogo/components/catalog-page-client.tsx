@@ -29,7 +29,7 @@ export function CatalogPageClient() {
   const backendStatusQuery = useQuery({
     queryKey: ["backend-health"],
     queryFn: async () => {
-      await apiClient.get("/api/health");
+      await apiClient.get("/health");
       return true;
     },
     retry: false,

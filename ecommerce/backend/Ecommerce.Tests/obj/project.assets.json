@@ -2668,11 +2668,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Franc\\Desktop\\EcommerceFullStack\\ecommerce\\backend\\Ecommerce.Tests\\Ecommerce.Tests.csproj",
+      "projectUniqueName": "C:\\Users\\Franc\\Desktop\\FullStackEcommerce\\FullStackEcommerce\\ecommerce\\backend\\Ecommerce.Tests\\Ecommerce.Tests.csproj",
       "projectName": "Ecommerce.Tests",
-      "projectPath": "C:\\Users\\Franc\\Desktop\\EcommerceFullStack\\ecommerce\\backend\\Ecommerce.Tests\\Ecommerce.Tests.csproj",
+      "projectPath": "C:\\Users\\Franc\\Desktop\\FullStackEcommerce\\FullStackEcommerce\\ecommerce\\backend\\Ecommerce.Tests\\Ecommerce.Tests.csproj",
       "packagesPath": "C:\\Users\\Franc\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Franc\\Desktop\\EcommerceFullStack\\ecommerce\\backend\\Ecommerce.Tests\\obj\\",
+      "outputPath": "C:\\Users\\Franc\\Desktop\\FullStackEcommerce\\FullStackEcommerce\\ecommerce\\backend\\Ecommerce.Tests\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -2693,11 +2693,11 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\Franc\\Desktop\\EcommerceFullStack\\ecommerce\\backend\\Ecommerce.API\\Ecommerce.API.csproj": {
-              "projectPath": "C:\\Users\\Franc\\Desktop\\EcommerceFullStack\\ecommerce\\backend\\Ecommerce.API\\Ecommerce.API.csproj"
+            "C:\\Users\\Franc\\Desktop\\FullStackEcommerce\\FullStackEcommerce\\ecommerce\\backend\\Ecommerce.API\\Ecommerce.API.csproj": {
+              "projectPath": "C:\\Users\\Franc\\Desktop\\FullStackEcommerce\\FullStackEcommerce\\ecommerce\\backend\\Ecommerce.API\\Ecommerce.API.csproj"
             },
-            "C:\\Users\\Franc\\Desktop\\EcommerceFullStack\\ecommerce\\backend\\Ecommerce.Domain\\Ecommerce.Domain.csproj": {
-              "projectPath": "C:\\Users\\Franc\\Desktop\\EcommerceFullStack\\ecommerce\\backend\\Ecommerce.Domain\\Ecommerce.Domain.csproj"
+            "C:\\Users\\Franc\\Desktop\\FullStackEcommerce\\FullStackEcommerce\\ecommerce\\backend\\Ecommerce.Domain\\Ecommerce.Domain.csproj": {
+              "projectPath": "C:\\Users\\Franc\\Desktop\\FullStackEcommerce\\FullStackEcommerce\\ecommerce\\backend\\Ecommerce.Domain\\Ecommerce.Domain.csproj"
             }
           }
         }

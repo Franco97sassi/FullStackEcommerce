@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "WBD9V7WUr0s=",
+  "dgSpecHash": "g6maPZTYOw8=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Franc\\Desktop\\EcommerceFullStack\\ecommerce\\backend\\Ecommerce.API\\Ecommerce.API.csproj",
+  "projectFilePath": "C:\\Users\\Franc\\Desktop\\FullStackEcommerce\\FullStackEcommerce\\ecommerce\\backend\\Ecommerce.API\\Ecommerce.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Franc\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\Franc\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
