@@ -18,8 +18,8 @@ const features = [
     icon: "⚙️",
   },
   {
-    title: "Listo para demo",
-    description: "Docker Compose, health checks, métricas Prometheus y documentación operativa.",
+     title: "Operación confiable",
+    description: "Infraestructura monitoreada, disponibilidad permanente y procesos preparados para ventas reales.",
     icon: "🚀",
   },
 ];
@@ -33,18 +33,14 @@ export default function HomePage() {
         <div className="space-y-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/75 px-4 py-2 text-sm font-semibold text-orange-700 shadow-sm backdrop-blur">
             <span className="size-2 rounded-full bg-emerald-500" />
-            Full-stack ecommerce portfolio
-          </div>
+            Tienda online en producción          </div>
 
           <div className="space-y-5">
             <h1 className="max-w-4xl text-5xl font-black tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
-              Una tienda online moderna, elegante y lista para presentar.
-            </h1>
+              Compra productos seleccionados con una experiencia rápida, segura y confiable.            </h1>
 
             <p className="max-w-2xl text-lg leading-8 text-slate-600">
-              Proyecto ecommerce con catálogo, carrito, checkout, autenticación JWT, panel admin y observabilidad;
-              construido con Next.js, ASP.NET Core y PostgreSQL.
-            </p>
+                          Encontrá productos, agregalos al carrito y finalizá tu compra con stock actualizado, pagos seguros y seguimiento de tus pedidos.          </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -59,8 +55,7 @@ export default function HomePage() {
               href="/admin"
               className="rounded-full border border-slate-300 bg-white/80 px-6 py-4 text-center font-semibold text-slate-900 shadow-sm backdrop-blur hover:border-orange-300 hover:text-orange-700"
             >
-              Ver panel admin
-            </Link>
+              Gestionar tienda            </Link>
           </div>
 
           <dl className="grid max-w-2xl grid-cols-3 gap-3 pt-4">
@@ -94,7 +89,7 @@ export default function HomePage() {
 
               <div className="grid gap-4 p-5 sm:grid-cols-2">
                 <div className="rounded-2xl bg-white/10 p-4">
-                  <p className="text-sm text-slate-400">Ventas demo</p>
+                  <p className="text-sm text-slate-400">Ventas </p>
                   <p className="mt-2 text-3xl font-black">$12.8k</p>
                   <p className="mt-3 text-sm text-emerald-300">+18% esta semana</p>
                 </div>
@@ -102,7 +97,7 @@ export default function HomePage() {
                 <div className="rounded-2xl bg-orange-400 p-4 text-slate-950">
                   <p className="text-sm font-semibold text-orange-950/70">Órdenes</p>
                   <p className="mt-2 text-3xl font-black">248</p>
-                  <p className="mt-3 text-sm font-semibold">Checkout validado</p>
+                  <p className="mt-3 text-sm font-semibold">Checkout seguro</p>
                 </div>
 
                 <div className="rounded-2xl bg-white p-4 text-slate-950 sm:col-span-2">
@@ -119,8 +114,7 @@ export default function HomePage() {
                     <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-orange-400 to-sky-400" />
                   </div>
 
-                  <p className="mt-3 text-sm text-slate-500">Stock, carrito y orden conectados al backend.</p>
-                </div>
+                  <p className="mt-3 text-sm text-slate-500">Stock, carrito y órdenes sincronizados en tiempo real.</p>                </div>
               </div>
             </div>
           </div>

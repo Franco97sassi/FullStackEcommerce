@@ -6,9 +6,8 @@ import { AuthProvider } from "@/app/auth/context/auth-context";
 import { CartProvider } from "@/app/carrito/context/cart-context";
 
 export const metadata: Metadata = {
-  title: "Ecommerce Portfolio",
-  description: "Ecommerce full-stack con Next.js, ASP.NET Core, PostgreSQL y observabilidad.",
-};
+   title: "Ecommerce",
+  description: "Tienda online con catálogo, carrito, checkout seguro y seguimiento de compras.",};
 
 const navLinks = [
   { href: "/catalogo", label: "Catálogo" },
@@ -39,8 +38,7 @@ export default function RootLayout({
 
                       <span>
                         <span className="block text-base leading-none">Ecommerce</span>
-                        <span className="text-xs font-medium text-slate-500">Full-stack demo</span>
-                      </span>
+                        <span className="text-xs font-medium text-slate-500">Tienda online</span>                      </span>
                     </Link>
 
                     <div className="hidden items-center gap-1 rounded-full border border-slate-200 bg-white/70 p-1 text-sm text-slate-700 shadow-sm md:flex">
