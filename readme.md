@@ -363,7 +363,7 @@ Accesos por defecto:
 - Usuarios demo normal/admin.
 - Capturas o video corto.
 - Limpieza final del repositorio.
-- Confirmar que `npm run test`, `npm run lint`, `npm run build` y `dotnet test` pasan en CI.
+- Mantener `npm run test`, `npm run lint`, `npm run build` y `dotnet test` en verde en CI.
 - Agregar licencia.
 
 ---

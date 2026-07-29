@@ -1,4 +1,4 @@
-name: CD Docker (manual)
+name: Publish images
 
 on:
   workflow_dispatch:

@@ -151,7 +151,14 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<EcommerceDbContext>();
-    await dbContext.Database.MigrateAsync();
+    if (app.Environment.IsEnvironment("Testing"))
+    {
+        await dbContext.Database.EnsureCreatedAsync();
+    }
+    else
+    {
+        await dbContext.Database.MigrateAsync();
+    }
     await CatalogSeed.SeedAsync(dbContext);
 }
 
@@ -175,3 +182,5 @@ app.MapGet("/metrics", (RequestMetricsStore store) => Results.Text(store.ToProme
 app.MapControllers();
 
 app.Run();
+
+public partial class Program;
