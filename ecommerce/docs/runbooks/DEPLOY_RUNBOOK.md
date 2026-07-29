@@ -32,7 +32,7 @@ dotnet test
 Desde `ecommerce`:
 
 ```bash
-cp env.example .env
+cp .env.example .env
 docker compose up --build
 ```
 

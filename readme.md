@@ -132,7 +132,7 @@ Proyecto **e-commerce full stack** pensado para portfolio técnico: una tienda o
 └── ecommerce/
     ├── docker-compose.yml
     ├── docker-compose-prod.yml
-    ├── env.example
+    ├── .env.example
     ├── backend/
     │   ├── Ecommerce.API/
     │   ├── Ecommerce.Application/

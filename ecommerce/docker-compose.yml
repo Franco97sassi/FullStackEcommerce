@@ -37,7 +37,7 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-ecommerce_db};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
-      Jwt__Key: ${JWT_KEY:-supersecretkey_dev_only_change_me}
+      Jwt__Key: ${JWT_KEY:?Define JWT_KEY in ecommerce/.env (copy .env.example for local development)}
       Jwt__Issuer: ${JWT_ISSUER:-Ecommerce.API}
       Jwt__Audience: ${JWT_AUDIENCE:-Ecommerce.Web}
     ports:

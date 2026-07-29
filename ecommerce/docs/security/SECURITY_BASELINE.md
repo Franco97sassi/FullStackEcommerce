@@ -12,6 +12,8 @@ publicar una demo o desplegar el proyecto en un entorno compartido.
 - Rate limiting global con límites más estrictos para rutas de autenticación y checkout.
 - Middleware de headers de seguridad, logging de requests, correlation id, métricas y manejo global de excepciones.
 - Endpoints de operación separados: `/healthz` para salud y `/metrics` para scraping estilo Prometheus.
+- Análisis automático de secretos con Gitleaks en cada push, pull request y ejecución manual.
+
 
 ## Requisitos antes de producción
 
@@ -23,6 +25,9 @@ publicar una demo o desplegar el proyecto en un entorno compartido.
 6. Revisar logs para evitar datos sensibles.
 7. Ejecutar migraciones y seed de datos en un entorno controlado.
 8. Ejecutar pruebas automáticas antes de cada despliegue.
+9. Activar en GitHub **Secret scanning** y **Push protection** desde *Settings > Code security and analysis*.
+10. Si un secreto llegó a Git, revocarlo y rotarlo; eliminarlo del historial no invalida una credencial expuesta.
+
 
 ## Variables sensibles
 
@@ -39,3 +44,5 @@ publicar una demo o desplegar el proyecto en un entorno compartido.
 - [ ] Swagger está expuesto solo en Development.
 - [ ] El frontend compila con `npm run build`.
 - [ ] El backend pasa `dotnet test`.
+- [ ] Gitleaks revisó el historial completo sin detectar secretos (`fetch-depth: 0`).
+- [ ] Secret scanning y Push protection están activos en GitHub.

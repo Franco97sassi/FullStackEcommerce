@@ -104,7 +104,7 @@ Flujo típico de usuario:
 ├─ ecommerce/
 │  ├─ docker-compose.yml
 │  ├─ docker-compose-prod.yml
-│  ├─ env.example
+│  ├─ .env.example
 │  ├─ backend/
 │  │  ├─ Ecommerce.API/
 │  │  ├─ Ecommerce.Application/
@@ -142,7 +142,7 @@ Flujo típico de usuario:
 2. Crear archivo de entorno:
 
    ```bash
-   cp env.example .env
+   cp .env.example .env
    ```
 
 3. Levantar servicios:
@@ -218,7 +218,7 @@ npm run dev
 
 ## Variables de entorno
 
-Basado en `ecommerce/env.example`:
+Basado en `ecommerce/.env.example`:
 
 ```env
 # PostgreSQL
