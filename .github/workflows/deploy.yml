@@ -1,21 +1,105 @@
-name: Deploy
+name: Publish images and update GitOps
 
 on:
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Immutable tag to publish (defaults to sha-<commit>)
+        required: false
+        type: string
   push:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: production-images
+  cancel-in-progress: false
+
 jobs:
-  build-and-publish-images:
-    name: Build and publish Docker images (GHCR)
+  test-build-scan-push:
+    name: Test, build, scan and publish
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
-      - name: Checkout
+      - name: Checkout application source
         uses: actions/checkout@v4
+
+      - name: Select immutable image coordinates
+        id: image
+        shell: bash
+        env:
+          REQUESTED_TAG: ${{ inputs.image_tag }}
+        run: |
+          tag="${REQUESTED_TAG:-sha-${GITHUB_SHA::12}}"
+          prefix="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "backend=$prefix/backend:$tag" >> "$GITHUB_OUTPUT"
+          echo "frontend=$prefix/frontend:$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Test backend
+        run: dotnet test ecommerce/backend/Ecommerce.slnx --configuration Release
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ecommerce/frontend/package-lock.json
+
+      - name: Test and build frontend
+        working-directory: ecommerce/frontend
+        run: |
+          npm ci
+          npm test
+          npm run lint
+          npm run build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image locally
+        uses: docker/build-push-action@v6
+        with:
+          context: ecommerce/backend
+          file: ecommerce/backend/Dockerfile
+          load: true
+          push: false
+          tags: ${{ steps.image.outputs.backend }}
+
+      - name: Build frontend image locally
+        uses: docker/build-push-action@v6
+        with:
+          context: ecommerce/frontend
+          file: ecommerce/frontend/Dockerfile.prod
+          load: true
+          push: false
+          tags: ${{ steps.image.outputs.frontend }}
+
+      - name: Scan backend image
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: ${{ steps.image.outputs.backend }}
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Scan frontend image
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: ${{ steps.image.outputs.frontend }}
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -24,54 +108,40 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (backend)
-        id: meta_backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}/backend
-          tags: |
-            type=ref,event=tag
-            type=sha
+      - name: Push scanned images
+        run: |
+          docker push "${{ steps.image.outputs.backend }}"
+          docker push "${{ steps.image.outputs.frontend }}"
 
-      - name: Extract metadata (frontend)
-        id: meta_frontend
-        uses: docker/metadata-action@v5
+      - name: Check out the GitOps branch
+        uses: actions/checkout@v4
         with:
-          images: ghcr.io/${{ github.repository }}/frontend
-          tags: |
-            type=ref,event=tag
-            type=sha
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
 
-      - name: Build and push backend image
-        uses: docker/build-push-action@v6
+      - name: Update production image references
+        uses: mikefarah/yq@v4.45.1
+        env:
+          IMAGE_TAG: ${{ steps.image.outputs.tag }}
+          IMAGE_PREFIX: ghcr.io/${{ github.repository }}
         with:
-          context: ./ecommerce/backend
-          push: true
-          tags: ${{ steps.meta_backend.outputs.tags }}
-          labels: ${{ steps.meta_backend.outputs.labels }}
+          cmd: |
+            IMAGE_PREFIX=$(printf '%s' "$IMAGE_PREFIX" | tr '[:upper:]' '[:lower:]') \
+            yq -i '.backend.image.repository = strenv(IMAGE_PREFIX) + "/backend" |
+              .backend.image.tag = strenv(IMAGE_TAG) |
+              .frontend.image.repository = strenv(IMAGE_PREFIX) + "/frontend" |
+              .frontend.image.tag = strenv(IMAGE_TAG)' deploy/helm/ecommerce/values-prod.yaml
 
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./ecommerce/frontend
-          file: ./ecommerce/frontend/Dockerfile.prod
-          push: true
-          tags: ${{ steps.meta_frontend.outputs.tags }}
-          labels: ${{ steps.meta_frontend.outputs.labels }}
-
-  deploy-production:
-    name: Deploy production (optional SSH step)
-    runs-on: ubuntu-latest
-    needs: build-and-publish-images
-    if: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_USER != '' && secrets.DEPLOY_SSH_KEY != '' }}
-    steps:
-      - name: Deploy on remote host
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            cd /opt/ecommerce
-            docker compose -f docker-compose-prod.yml pull
-            docker compose -f docker-compose-prod.yml up -d
+      - name: Commit the desired state
+        env:
+          IMAGE_TAG: ${{ steps.image.outputs.tag }}
+        run: |
+          if git diff --quiet -- deploy/helm/ecommerce/values-prod.yaml; then
+            echo "Production already references $IMAGE_TAG"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deploy/helm/ecommerce/values-prod.yaml
+          git commit -m "chore(gitops): deploy $IMAGE_TAG [skip ci]"
+          git push origin "HEAD:${{ github.event.repository.default_branch }}"

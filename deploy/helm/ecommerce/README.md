@@ -51,6 +51,11 @@ helm upgrade --install ecommerce deploy/helm/ecommerce \
   --set frontend.image.tag=1.2.3
 ```
 
+En producción, `.github/workflows/deploy.yml` actualiza los repositorios y tags de
+`values-prod.yaml` después de probar, construir, escanear y publicar ambas imágenes.
+Argo CD observa ese commit mediante `deploy/argocd/ecommerce-production.yaml`; no
+se deben añadir pasos de build ni credenciales del registry a Argo CD.
+
 `NEXT_PUBLIC_API_URL` normalmente se incorpora en el bundle del navegador durante
 `next build`. La imagen del frontend debe construirse con la misma URL indicada en
 `frontend.config.apiUrl`; el ConfigMap también la expone para código ejecutado en el

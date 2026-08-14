@@ -1,6 +1,7 @@
 backend:
   replicas: 3
   image:
+    repository: ghcr.io/owner/repository/backend
     tag: "1.0.0"
   autoscaling:
     minReplicas: 3
@@ -8,6 +9,7 @@ backend:
 frontend:
   replicas: 3
   image:
+    repository: ghcr.io/owner/repository/frontend
     tag: "1.0.0"
   autoscaling:
     minReplicas: 3
