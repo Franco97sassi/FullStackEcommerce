@@ -1,4 +1,5 @@
 ﻿using Ecommerce.Domain.Entities;
+using Ecommerce.Infrastructure.Messaging;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Reflection.Emit;
@@ -18,6 +19,7 @@ public class EcommerceDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -222,6 +224,19 @@ public class EcommerceDbContext : DbContext
 
             entity.HasIndex(x => new { x.CartId, x.ProductId })
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<OutboxMessage>(entity =>
+        {
+            entity.ToTable("outbox_messages");
+            entity.HasKey(message => message.Id);
+            entity.Property(message => message.Topic).IsRequired().HasMaxLength(255);
+            entity.Property(message => message.MessageKey).IsRequired().HasMaxLength(255);
+            entity.Property(message => message.EventType).IsRequired().HasMaxLength(255);
+            entity.Property(message => message.Payload).IsRequired().HasColumnType("text");
+            entity.Property(message => message.OccurredAtUtc).IsRequired();
+            entity.Property(message => message.LastError).HasMaxLength(2000);
+            entity.HasIndex(message => new { message.ProcessedAtUtc, message.NextAttemptAtUtc });
         });
 
 

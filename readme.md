@@ -60,6 +60,7 @@ Proyecto **e-commerce full stack** pensado para portfolio técnico: una tienda o
 - Rate limiting global, con límites más estrictos para auth y checkout.
 - Docker Compose para levantar frontend, backend y PostgreSQL.
 - Stack opcional Prometheus + Grafana.
+- Publicación asíncrona de órdenes en Kafka mediante transactional outbox.
 
 ---
 
@@ -82,6 +83,7 @@ Proyecto **e-commerce full stack** pensado para portfolio técnico: una tienda o
 - **JWT Bearer Authentication**
 - **BCrypt** para hash de contraseñas
 - **Swagger/OpenAPI** en desarrollo
+- **Kafka** para eventos de órdenes con entrega al menos una vez
 
 ### Infraestructura y calidad
 
@@ -108,6 +110,7 @@ Proyecto **e-commerce full stack** pensado para portfolio técnico: una tienda o
 
 [ Prometheus ] ---- scrape ----> /metrics
 [ Grafana ] ---- dashboards ---> Prometheus
+[ ASP.NET Core API ] ---- outbox ----> [ PostgreSQL ] ---- publish ----> [ Kafka ]
 ```
 
 ### Flujo principal
