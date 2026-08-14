@@ -1,0 +1,29 @@
+{{- if .Values.backend.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "ecommerce.componentName" (dict "root" . "component" "backend") }}
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  minAvailable: {{ .Values.backend.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "ecommerce.selectorLabels" (dict "root" . "component" "backend" "Chart" .Chart "Release" .Release "Values" .Values) | nindent 6 }}
+---
+{{- end }}
+{{- if .Values.frontend.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "ecommerce.componentName" (dict "root" . "component" "frontend") }}
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  minAvailable: {{ .Values.frontend.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "ecommerce.selectorLabels" (dict "root" . "component" "frontend" "Chart" .Chart "Release" .Release "Values" .Values) | nindent 6 }}
+{{- end }}
