@@ -2,12 +2,13 @@
 using Ecommerce.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Ecommerce.Infrastructure.Search;
 
 namespace Ecommerce.API.Controllers.Catalog;
 
 [ApiController]
 [Route("api/catalog/products")]
-public class ProductsController(EcommerceDbContext dbContext) : ControllerBase
+public class ProductsController(EcommerceDbContext dbContext, IProductSearch productSearch) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<PagedProductsResponse>> Get(
@@ -22,6 +23,16 @@ public class ProductsController(EcommerceDbContext dbContext) : ControllerBase
         var safePage = Math.Max(1, page);
         var safePageSize = Math.Clamp(pageSize, 1, 50);
         var normalizedSearch = search?.Trim().ToLowerInvariant();
+
+        var elasticsearchResult = await productSearch.SearchAsync(search, category, minPrice, maxPrice,
+            safePage, safePageSize, cancellationToken);
+        if (elasticsearchResult is not null)
+        {
+            var searchTotalPages = Math.Max(1, (int)Math.Ceiling(elasticsearchResult.Total / (double)safePageSize));
+            return Ok(new PagedProductsResponse(elasticsearchResult.Items.Select(p => new ProductResponse(
+                p.Id, p.Name, p.Slug, p.Description, p.Price, p.Stock, p.CategoryName, p.CategorySlug)).ToList(),
+                safePage, safePageSize, elasticsearchResult.Total, searchTotalPages));
+        }
 
         var query = dbContext.Products
             .AsNoTracking()
@@ -72,6 +83,17 @@ public class ProductsController(EcommerceDbContext dbContext) : ControllerBase
             .ToListAsync(cancellationToken);
 
         return Ok(new PagedProductsResponse(items, safePage, safePageSize, total, totalPages));
+    }
+
+    [HttpGet("suggest")]
+    public async Task<ActionResult<IReadOnlyList<string>>> Suggest([FromQuery] string search,
+        [FromQuery] int size = 8, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(search)) return Ok(Array.Empty<string>());
+        var suggestions = await productSearch.SuggestAsync(search.Trim(), Math.Clamp(size, 1, 20), cancellationToken);
+        if (suggestions is not null) return Ok(suggestions);
+        return Ok(await dbContext.Products.AsNoTracking().Where(p => p.IsActive && p.Name.ToLower().Contains(search.Trim().ToLower()))
+            .OrderBy(p => p.Name).Select(p => p.Name).Take(Math.Clamp(size, 1, 20)).ToListAsync(cancellationToken));
     }
 
     [HttpGet("{slug}")]

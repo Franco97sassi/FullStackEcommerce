@@ -1,6 +1,9 @@
 ﻿using Ecommerce.API.Contracts;
 using Ecommerce.Domain.Entities;
 using Ecommerce.Infrastructure.Persistence;
+using Ecommerce.Application.Events;
+using Ecommerce.Infrastructure.Messaging;
+using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +13,7 @@ namespace Ecommerce.API.Controllers.Admin;
 [ApiController]
 [Route("api/admin")]
 [Authorize(Roles = "Admin")]
-public class AdminManagementController(EcommerceDbContext dbContext) : ControllerBase
+public class AdminManagementController(EcommerceDbContext dbContext, IOptions<KafkaOptions> kafkaOptions) : ControllerBase
 {
     [HttpGet("categories")]
     public async Task<ActionResult<IReadOnlyList<AdminCategoryResponse>>> GetCategories(CancellationToken cancellationToken = default)
@@ -145,6 +148,7 @@ public class AdminManagementController(EcommerceDbContext dbContext) : Controlle
         };
 
         dbContext.Products.Add(product);
+        QueueProductChange(product.Id, "created");
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var categoryName = await dbContext.Categories
@@ -185,6 +189,7 @@ public class AdminManagementController(EcommerceDbContext dbContext) : Controlle
         product.IsActive = request.IsActive;
         product.CategoryId = request.CategoryId;
 
+        QueueProductChange(product.Id, "updated");
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Ok(new AdminProductResponse(product.Id, product.Name, product.Slug, product.Description, product.Price, product.Stock, product.IsActive, product.CategoryId, category.Name));
@@ -205,6 +210,7 @@ public class AdminManagementController(EcommerceDbContext dbContext) : Controlle
         }
 
         product.Stock = request.Stock;
+        QueueProductChange(product.Id, "updated");
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Ok(new AdminProductResponse(product.Id, product.Name, product.Slug, product.Description, product.Price, product.Stock, product.IsActive, product.CategoryId, product.Category.Name));
@@ -220,9 +226,17 @@ public class AdminManagementController(EcommerceDbContext dbContext) : Controlle
         }
 
         dbContext.Products.Remove(product);
+        QueueProductChange(product.Id, "deleted");
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return NoContent();
+    }
+
+    private void QueueProductChange(Guid productId, string operation)
+    {
+        if (!kafkaOptions.Value.Enabled) return;
+        var change = new ProductChangedEvent(Guid.NewGuid(), productId, operation, DateTime.UtcNow);
+        dbContext.OutboxMessages.Add(OutboxMessageFactory.From(change, kafkaOptions.Value.ProductChangedTopic));
     }
 
     [HttpGet("orders")]
