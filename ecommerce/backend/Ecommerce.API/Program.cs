@@ -11,11 +11,27 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using Ecommerce.API.Grpc;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHealthChecks();
+builder.Services.AddGrpc(options =>
+{
+    options.Interceptors.Add<ServiceAuthenticationInterceptor>();
+    options.Interceptors.Add<GrpcExceptionInterceptor>();
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+});
+builder.Services.AddGrpcHealthChecks();
+builder.Services.Configure<ServiceAuthenticationOptions>(builder.Configuration.GetSection(ServiceAuthenticationOptions.SectionName));
+builder.Services.AddSingleton<InventoryReservationStore>();
+builder.Services.AddInternalGrpcClients(builder.Configuration);
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("ecommerce-api"))
+    .WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddGrpcClientInstrumentation().AddOtlpExporter());
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
@@ -26,15 +42,15 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
             .ToDictionary(
                 kvp => kvp.Key,
                 kvp => kvp.Value!.Errors
-                    .Select(error => string.IsNullOrWhiteSpace(error.ErrorMessage) ? "Valor inválido." : error.ErrorMessage)
+                    .Select(error => string.IsNullOrWhiteSpace(error.ErrorMessage) ? "Valor invÃ¡lido." : error.ErrorMessage)
                     .ToArray());
 
         var response = new
         {
             type = "validation_error",
-            title = "Request inválida",
+            title = "Request invÃ¡lida",
             status = StatusCodes.Status400BadRequest,
-            detail = "Uno o más campos son inválidos.",
+            detail = "Uno o mÃ¡s campos son invÃ¡lidos.",
             traceId = context.HttpContext.TraceIdentifier,
             errors
         };
@@ -53,7 +69,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Ingresá el token JWT. Ejemplo: Bearer eyJhbGciOi..."
+        Description = "IngresÃ¡ el token JWT. Ejemplo: Bearer eyJhbGciOi..."
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -180,6 +196,11 @@ app.UseAuthorization();
 app.MapHealthChecks("/healthz");
 app.MapGet("/metrics", (RequestMetricsStore store) => Results.Text(store.ToPrometheus(), "text/plain; version=0.0.4"));
 app.MapControllers();
+app.MapGrpcService<CatalogGrpcService>();
+app.MapGrpcService<InventoryGrpcService>();
+app.MapGrpcService<OrderGrpcService>();
+app.MapGrpcService<PaymentGrpcService>();
+app.MapGrpcHealthChecksService();
 
 app.Run();
 

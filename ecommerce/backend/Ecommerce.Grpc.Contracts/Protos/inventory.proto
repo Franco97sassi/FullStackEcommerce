@@ -1,0 +1,17 @@
+syntax = "proto3";
+package ecommerce.inventory.v1;
+option csharp_namespace = "Ecommerce.Grpc.Contracts.Inventory.V1";
+
+service InventoryService {
+  rpc CheckAvailability(CheckAvailabilityRequest) returns (AvailabilityResponse);
+  rpc ReserveInventory(ReserveInventoryRequest) returns (ReservationResponse);
+  rpc ReleaseInventory(ReleaseInventoryRequest) returns (ReleaseInventoryResponse);
+}
+message InventoryLine { string product_id = 1; int32 quantity = 2; }
+message AvailabilityLine { string product_id = 1; int32 requested_quantity = 2; int32 available_quantity = 3; bool available = 4; }
+message CheckAvailabilityRequest { repeated InventoryLine items = 1; }
+message AvailabilityResponse { bool available = 1; repeated AvailabilityLine items = 2; }
+message ReserveInventoryRequest { string reservation_id = 1; repeated InventoryLine items = 2; }
+message ReservationResponse { string reservation_id = 1; bool reserved = 2; }
+message ReleaseInventoryRequest { string reservation_id = 1; }
+message ReleaseInventoryResponse { string reservation_id = 1; bool released = 2; }

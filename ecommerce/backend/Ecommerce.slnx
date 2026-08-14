@@ -3,5 +3,6 @@
   <Project Path="Ecommerce.Application/Ecommerce.Application.csproj" />
   <Project Path="Ecommerce.Domain/Ecommerce.Domain.csproj" />
   <Project Path="Ecommerce.Infrastructure/Ecommerce.Infrastructure.csproj" />
+  <Project Path="Ecommerce.Grpc.Contracts/Ecommerce.Grpc.Contracts.csproj" />
   <Project Path="Ecommerce.Tests/Ecommerce.Tests.csproj" />
 </Solution>

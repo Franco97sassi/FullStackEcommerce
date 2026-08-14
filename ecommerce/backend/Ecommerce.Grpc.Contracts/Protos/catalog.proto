@@ -1,0 +1,28 @@
+syntax = "proto3";
+package ecommerce.catalog.v1;
+option csharp_namespace = "Ecommerce.Grpc.Contracts.Catalog.V1";
+
+service CatalogService {
+  rpc GetProduct(GetProductRequest) returns (ProductResponse);
+  rpc GetProducts(GetProductsRequest) returns (ProductsResponse);
+}
+
+message GetProductRequest { string product_id = 1; }
+message GetProductsRequest {
+  repeated string product_ids = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+message ProductResponse {
+  string product_id = 1;
+  string name = 2;
+  string slug = 3;
+  string description = 4;
+  string price = 5;
+  int32 available_quantity = 6;
+  string category_id = 7;
+}
+message ProductsResponse {
+  repeated ProductResponse products = 1;
+  int32 total_count = 2;
+}
