@@ -1,0 +1,13 @@
+backend:
+  image:
+    tag: staging
+frontend:
+  image:
+    tag: staging
+  config:
+    apiUrl: https://api.staging.tienda.example.com
+ingress:
+  frontendHost: staging.tienda.example.com
+  backendHost: api.staging.tienda.example.com
+  tls:
+    secretName: ecommerce-staging-tls

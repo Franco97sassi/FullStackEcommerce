@@ -1,0 +1,100 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-default-deny
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-allow-dns
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - {protocol: UDP, port: 53}
+        - {protocol: TCP, port: 53}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ecommerce.componentName" (dict "root" . "component" "frontend") }}
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "ecommerce.selectorLabels" (dict "root" . "component" "frontend" "Chart" .Chart "Release" .Release "Values" .Values) | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              {{- toYaml .Values.networkPolicy.ingressNamespaceLabels | nindent 14 }}
+      ports:
+        - {protocol: TCP, port: {{ .Values.frontend.service.port }}}
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "ecommerce.selectorLabels" (dict "root" . "component" "backend" "Chart" .Chart "Release" .Release "Values" .Values) | nindent 14 }}
+      ports:
+        - {protocol: TCP, port: {{ .Values.backend.service.port }}}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ecommerce.componentName" (dict "root" . "component" "backend") }}
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "ecommerce.selectorLabels" (dict "root" . "component" "backend" "Chart" .Chart "Release" .Release "Values" .Values) | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "ecommerce.selectorLabels" (dict "root" . "component" "frontend" "Chart" .Chart "Release" .Release "Values" .Values) | nindent 14 }}
+        - namespaceSelector:
+            matchLabels:
+              {{- toYaml .Values.networkPolicy.ingressNamespaceLabels | nindent 14 }}
+        {{- if .Values.serviceMonitor.enabled }}
+        - namespaceSelector:
+            matchLabels:
+              {{- toYaml .Values.networkPolicy.monitoringNamespaceLabels | nindent 14 }}
+          podSelector:
+            matchLabels:
+              {{- toYaml .Values.networkPolicy.monitoringPodLabels | nindent 14 }}
+        {{- end }}
+      ports:
+        - {protocol: TCP, port: {{ .Values.backend.service.port }}}
+  egress:
+    - to:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 5432}
+        - {protocol: TCP, port: 6379}
+        - {protocol: TCP, port: 9092}
+        - {protocol: TCP, port: 9200}
+        - {protocol: TCP, port: 4317}
+{{- end }}

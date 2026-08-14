@@ -14,11 +14,13 @@ using Microsoft.AspNetCore.RateLimiting;
 using Ecommerce.API.Grpc;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<PostgresHealthCheck>("postgres", tags: ["ready"]);
 builder.Services.AddGrpc(options =>
 {
     options.Interceptors.Add<ServiceAuthenticationInterceptor>();
@@ -193,6 +195,15 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("ready")
+});
+// Alias kept for Docker Compose and existing external integrations.
 app.MapHealthChecks("/healthz");
 app.MapGet("/metrics", (RequestMetricsStore store) => Results.Text(store.ToPrometheus(), "text/plain; version=0.0.4"));
 app.MapControllers();

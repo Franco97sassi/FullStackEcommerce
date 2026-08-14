@@ -59,6 +59,7 @@ Proyecto **e-commerce full stack** pensado para portfolio técnico: una tienda o
 - Headers de seguridad.
 - Rate limiting global, con límites más estrictos para auth y checkout.
 - Docker Compose para levantar frontend, backend y PostgreSQL.
+- Manifiestos Kubernetes con Kustomize, autoscaling, probes, TLS y NetworkPolicies.
 - Stack opcional Prometheus + Grafana.
 - Publicación asíncrona de órdenes en Kafka mediante transactional outbox.
 
@@ -131,6 +132,8 @@ Proyecto **e-commerce full stack** pensado para portfolio técnico: una tienda o
 .
 ├── readme.md
 ├── docker-compose.observability.yml
+├── deploy/
+│   └── helm/ecommerce/
 ├── env.prod.example
 └── ecommerce/
     ├── docker-compose.yml
@@ -152,6 +155,9 @@ Proyecto **e-commerce full stack** pensado para portfolio técnico: una tienda o
     └── docs/
         ├── runbooks/
         └── security/
+    └── k8s/
+        ├── base/
+        └── overlays/local/
 ```
 
 ---
@@ -196,6 +202,8 @@ Luego abrir:
 - Backend: http://localhost:8080
 - Swagger: http://localhost:8080/swagger
 - Healthcheck: http://localhost:8080/healthz
+- Liveness: http://localhost:8080/health/live
+- Readiness: http://localhost:8080/health/ready
 - Métricas: http://localhost:8080/metrics
 
 ---
@@ -288,7 +296,39 @@ Requiere rol admin.
 ### Operación
 
 - `GET /healthz`
+- `GET /health/live`
+- `GET /health/ready`
 - `GET /metrics`
+
+---
+
+## Kubernetes
+
+La aplicación dispone de una base Kustomize para PostgreSQL, backend y frontend,
+además de un overlay para clústeres locales. Incluye Deployments/StatefulSet,
+Services, ConfigMaps, Secret externo a Git, HPA, PDB, Ingress TLS, ServiceMonitor,
+ServiceAccounts y NetworkPolicies restrictivas.
+
+Consultar [`ecommerce/k8s/README.md`](ecommerce/k8s/README.md) para crear secretos,
+configurar imágenes y dominios, desplegar y verificar el entorno.
+
+### Helm
+
+Para gestionar despliegues parametrizados por entorno, el repositorio también
+incluye el chart [`deploy/helm/ecommerce`](deploy/helm/ecommerce). Sus values de
+desarrollo, staging y producción permiten configurar imágenes, réplicas, recursos,
+autoscaling, dependencias externas, Ingress, observabilidad y políticas de red sin
+duplicar manifiestos.
+
+```bash
+helm lint deploy/helm/ecommerce
+helm upgrade --install ecommerce deploy/helm/ecommerce \
+  --namespace ecommerce --create-namespace \
+  -f deploy/helm/ecommerce/values-dev.yaml
+```
+
+El procedimiento completo, incluida la gestión de secretos fuera de Git, está en
+[`deploy/helm/ecommerce/README.md`](deploy/helm/ecommerce/README.md).
 
 ---
 

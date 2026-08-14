@@ -1,0 +1,28 @@
+backend:
+  replicas: 1
+  image:
+    tag: dev
+  config:
+    aspnetcoreEnvironment: Development
+  autoscaling:
+    enabled: false
+  pdb:
+    enabled: false
+frontend:
+  replicas: 1
+  image:
+    tag: dev
+  config:
+    apiUrl: http://api.tienda.local
+  autoscaling:
+    enabled: false
+  pdb:
+    enabled: false
+ingress:
+  annotations: {}
+  frontendHost: tienda.local
+  backendHost: api.tienda.local
+  tls:
+    enabled: false
+serviceMonitor:
+  enabled: false

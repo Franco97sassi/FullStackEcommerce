@@ -13,9 +13,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/publish .
 
+USER $APP_UID
+
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD curl --fail http://localhost:8080/healthz || exit 1
+  CMD curl --fail http://localhost:8080/health/ready || exit 1
 
 ENTRYPOINT ["dotnet", "Ecommerce.API.dll"]
