@@ -1,6 +1,55 @@
 version: "3.9"
 
 services:
+  vault:
+    image: hashicorp/vault:1.18
+    cap_add: ["IPC_LOCK"]
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID:-dev-root-token}
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    ports:
+      - "${VAULT_PORT:-8200}:8200"
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  vault-init:
+    image: hashicorp/vault:1.18
+    depends_on:
+      vault:
+        condition: service_healthy
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_DEV_ROOT_TOKEN_ID:-dev-root-token}
+      POSTGRES_DB: ${POSTGRES_DB:-ecommerce_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      JWT_KEY: ${JWT_KEY:-supersecretkey_dev_only_change_me}
+      JWT_ISSUER: ${JWT_ISSUER:-Ecommerce.API}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-Ecommerce.Web}
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      vault kv put secret/ecommerce
+      ConnectionStrings__DefaultConnection="Host=postgres;Port=5432;Database=$${POSTGRES_DB:-ecommerce_db};Username=$${POSTGRES_USER:-postgres};Password=$${POSTGRES_PASSWORD:-postgres}"
+      Jwt__Key="$${JWT_KEY:-supersecretkey_dev_only_change_me}"
+      Jwt__Issuer="$${JWT_ISSUER:-Ecommerce.API}"
+      Jwt__Audience="$${JWT_AUDIENCE:-Ecommerce.Web}"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.5
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
   kafka:
     image: apache/kafka:3.9.1
     container_name: ecommerce_kafka
@@ -38,6 +87,9 @@ services:
       /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092
       --create --if-not-exists
       --topic $${KAFKA_ORDER_CREATED_TOPIC:-ecommerce.orders.created.v1}
+      --partitions 3 --replication-factor 1 &&
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092
+      --create --if-not-exists --topic $${KAFKA_PRODUCT_CHANGED_TOPIC:-ecommerce.products.changed.v1}
       --partitions 3 --replication-factor 1
 
   postgres:
@@ -72,6 +124,10 @@ services:
         condition: service_healthy
       kafka-init:
         condition: service_completed_successfully
+      elasticsearch:
+        condition: service_healthy
+      vault-init:
+        condition: service_completed_successfully
     env_file:
       - .env
     environment:
@@ -84,6 +140,12 @@ services:
       Kafka__Enabled: ${KAFKA_ENABLED:-true}
       Kafka__BootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
       Kafka__OrderCreatedTopic: ${KAFKA_ORDER_CREATED_TOPIC:-ecommerce.orders.created.v1}
+      Kafka__ProductChangedTopic: ${KAFKA_PRODUCT_CHANGED_TOPIC:-ecommerce.products.changed.v1}
+      Elasticsearch__Enabled: ${ELASTICSEARCH_ENABLED:-true}
+      Elasticsearch__Endpoint: http://elasticsearch:9200
+      Vault__Enabled: ${VAULT_ENABLED:-true}
+      Vault__Address: http://vault:8200
+      Vault__Token: ${VAULT_DEV_ROOT_TOKEN_ID:-dev-root-token}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     healthcheck:

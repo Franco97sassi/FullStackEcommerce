@@ -15,7 +15,9 @@ using Ecommerce.API.Grpc;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Ecommerce.API.Configuration;
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddVaultSecrets();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

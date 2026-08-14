@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using Ecommerce.Infrastructure.Messaging;
 using Ecommerce.Infrastructure.Persistence;
+using Ecommerce.Infrastructure.Search;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,6 +41,17 @@ public static class DependencyInjection
             return new ProducerBuilder<string, string>(producerConfig).Build();
         });
         services.AddHostedService<KafkaOutboxPublisher>();
+
+        services.AddOptions<ElasticsearchOptions>()
+            .Bind(configuration.GetSection(ElasticsearchOptions.SectionName))
+            .Validate(options => !options.Enabled || Uri.TryCreate(options.Endpoint, UriKind.Absolute, out _),
+                "Elasticsearch:Endpoint must be an absolute URI when search is enabled.")
+            .ValidateOnStart();
+        services.AddHttpClient("elasticsearch", (provider, client) =>
+            client.BaseAddress = new Uri(provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<ElasticsearchOptions>>().Value.Endpoint.TrimEnd('/') + "/"));
+        services.AddHttpClient<IProductSearch, ElasticsearchProductSearch>((provider, client) =>
+            client.BaseAddress = new Uri(provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<ElasticsearchOptions>>().Value.Endpoint.TrimEnd('/') + "/"));
+        services.AddHostedService<ProductSearchIndexer>();
 
         return services;
     }
