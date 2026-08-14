@@ -25,6 +25,9 @@ services:
       Jwt__Key: ${JWT_KEY:?JWT_KEY is required and must be a strong, unique secret}
       Jwt__Issuer: ${JWT_ISSUER:?JWT_ISSUER is required}
       Jwt__Audience: ${JWT_AUDIENCE:?JWT_AUDIENCE is required}
+      Kafka__Enabled: "true"
+      Kafka__BootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:?KAFKA_BOOTSTRAP_SERVERS is required}
+      Kafka__OrderCreatedTopic: ${KAFKA_ORDER_CREATED_TOPIC:-ecommerce.orders.created.v1}
     ports:
       - "8080:8080"
 

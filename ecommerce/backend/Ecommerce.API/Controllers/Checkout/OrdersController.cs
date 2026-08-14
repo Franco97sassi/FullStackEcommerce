@@ -1,17 +1,20 @@
 ﻿using System.Security.Claims;
+using Ecommerce.Application.Events;
 using Ecommerce.API.Contracts;
 using Ecommerce.Domain.Entities;
+using Ecommerce.Infrastructure.Messaging;
 using Ecommerce.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Ecommerce.API.Controllers.Checkout;
 
 [ApiController]
 [Route("api/checkout/orders")]
 [Authorize]
-public class OrdersController(EcommerceDbContext dbContext) : ControllerBase
+public class OrdersController(EcommerceDbContext dbContext, IOptions<KafkaOptions> kafkaOptions) : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<CreateOrderResponse>> Create(
@@ -121,6 +124,21 @@ public class OrdersController(EcommerceDbContext dbContext) : ControllerBase
         };
 
         dbContext.Orders.Add(order);
+        var orderCreatedEvent = new OrderCreatedEvent(
+            Guid.NewGuid(),
+            order.Id,
+            order.UserId,
+            order.CreatedAtUtc,
+            order.Status,
+            order.TotalAmount,
+            order.Items.Select(item => new OrderCreatedItem(
+                item.ProductId,
+                item.Quantity,
+                item.UnitPrice,
+                item.LineTotal)).ToList());
+        dbContext.OutboxMessages.Add(OutboxMessageFactory.From(
+            orderCreatedEvent,
+            kafkaOptions.Value.OrderCreatedTopic));
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var response = ToCreateOrderResponse(order, products);

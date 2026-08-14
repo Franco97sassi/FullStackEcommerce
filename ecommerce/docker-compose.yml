@@ -1,6 +1,45 @@
 version: "3.9"
 
 services:
+  kafka:
+    image: apache/kafka:3.9.1
+    container_name: ecommerce_kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: CONTROLLER://:9093,PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+    ports:
+      - "${KAFKA_PORT:-29092}:29092"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+  kafka-init:
+    image: apache/kafka:3.9.1
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092
+      --create --if-not-exists
+      --topic $${KAFKA_ORDER_CREATED_TOPIC:-ecommerce.orders.created.v1}
+      --partitions 3 --replication-factor 1
+
   postgres:
     image: postgres:16
     container_name: ecommerce_postgres
@@ -31,6 +70,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     env_file:
       - .env
     environment:
@@ -40,6 +81,9 @@ services:
       Jwt__Key: ${JWT_KEY:?Define JWT_KEY in ecommerce/.env (copy .env.example for local development)}
       Jwt__Issuer: ${JWT_ISSUER:-Ecommerce.API}
       Jwt__Audience: ${JWT_AUDIENCE:-Ecommerce.Web}
+      Kafka__Enabled: ${KAFKA_ENABLED:-true}
+      Kafka__BootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      Kafka__OrderCreatedTopic: ${KAFKA_ORDER_CREATED_TOPIC:-ecommerce.orders.created.v1}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     healthcheck:
