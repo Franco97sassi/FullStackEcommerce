@@ -1,0 +1,15 @@
+syntax = "proto3";
+package ecommerce.order.v1;
+option csharp_namespace = "Ecommerce.Grpc.Contracts.Order.V1";
+
+service OrderService { rpc GetOrder(GetOrderRequest) returns (OrderResponse); }
+message GetOrderRequest { string order_id = 1; }
+message OrderLine { string product_id = 1; int32 quantity = 2; string unit_price = 3; string line_total = 4; }
+message OrderResponse {
+  string order_id = 1;
+  string user_id = 2;
+  string status = 3;
+  string total_amount = 4;
+  int64 created_at_unix_ms = 5;
+  repeated OrderLine items = 6;
+}

@@ -1,0 +1,7 @@
+syntax = "proto3";
+package ecommerce.payment.v1;
+option csharp_namespace = "Ecommerce.Grpc.Contracts.Payment.V1";
+
+service PaymentService { rpc AuthorizePayment(AuthorizePaymentRequest) returns (PaymentResponse); }
+message AuthorizePaymentRequest { string payment_id = 1; string order_id = 2; string amount = 3; string currency = 4; string payment_token = 5; }
+message PaymentResponse { string payment_id = 1; string status = 2; string authorization_code = 3; }
